@@ -1,0 +1,643 @@
+package com.quinnox.libraryapplication.dao;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+
+import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
+import javax.persistence.Query;
+import javax.persistence.TypedQuery;
+import javax.transaction.Transactional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
+import com.quinnox.libraryapplication.dto.BookInfo;
+import com.quinnox.libraryapplication.dto.LibraryHistory;
+import com.quinnox.libraryapplication.dto.LibraryUsers;
+import com.quinnox.libraryapplication.dto.RequestInfo;
+import com.quinnox.libraryapplication.exception.LibraryException;
+
+@Repository
+public class LibraryDAOImplementation implements LibraryDAO {
+	@Autowired
+	EntityManager manager;
+
+	@Override
+	@Transactional
+	public boolean register(LibraryUsers user) {
+		String jpql = null;
+		boolean flag = false;
+		try {
+
+			jpql = "select users from LibraryUsers users ";
+			TypedQuery<LibraryUsers> query2 = manager.createQuery(jpql, LibraryUsers.class);
+			List<LibraryUsers> list = query2.getResultList();
+
+			for (LibraryUsers users : list) {
+				if (users.getEmailId().equalsIgnoreCase(user.getEmailId())) {
+					throw new LibraryException("User Email Id Already Exists");
+				}
+			}
+			manager.persist(user);
+			flag = true;
+			return true;
+		} catch (Exception e) {
+			if (flag) {
+			}
+			throw new LibraryException(e.getMessage());
+		} finally {
+			manager.close();
+		}
+	}
+
+//To Do for all users log in
+	@Override
+	public boolean adminAuthentication(String emailId, String password) {
+		String jpql;
+		try {
+			jpql = "select users from LibraryUsers users ";
+			TypedQuery<LibraryUsers> query2 = manager.createQuery(jpql, LibraryUsers.class);
+			List<LibraryUsers> list = query2.getResultList();
+			for (LibraryUsers users : list) {
+				if (users.getEmailId().equalsIgnoreCase(emailId) && (users.getPassword().equals(password))) {
+					return true;
+				}
+			}
+			throw new LibraryException("Invalid Login Credentials");
+
+		} catch (Exception e) {
+			throw new LibraryException(e.getMessage());
+		} finally {
+			manager.close();
+
+		}
+	}
+
+	@Override
+	@Transactional
+	public boolean userAuthentication(String emailId, String password) {
+		String jpql = null;
+		try {
+			jpql = "select users from LibraryUsers users ";
+			TypedQuery<LibraryUsers> query2 = manager.createQuery(jpql, LibraryUsers.class);
+			List<LibraryUsers> list = query2.getResultList();
+			for (LibraryUsers users : list) {
+				if (users.getEmailId().equalsIgnoreCase(emailId)
+						&& (users.getPassword().equals(password) && (users.getRole().equalsIgnoreCase("user")))) {
+					return true;
+				}
+			}
+
+			throw new LibraryException("Invalid User Credentials");
+
+		} catch (Exception e) {
+			throw new LibraryException(e.getMessage());
+		}
+	}
+
+	@Override
+	@Transactional
+	public boolean addBook(BookInfo book) {
+		EntityTransaction transaction = null;
+		try {
+			manager.persist(book);
+			return true;
+		} catch (Exception e) {
+
+			throw new LibraryException("Book Already Exists");
+		} finally {
+			manager.close();
+		}
+	}
+
+	@Override
+	@Transactional
+	public boolean deleteBook(int isbn) {
+		BookInfo info = new BookInfo();
+		try {
+			info = manager.find(BookInfo.class, isbn);
+			manager.remove(info);
+			return true;
+		} catch (Exception e) {
+
+			throw new LibraryException(
+					"Book Can't Be Removed, It was Issued To Someone Please Wait Untill It's Return");
+		} finally {
+			manager.close();
+		}
+	}
+
+	@Override
+	@Transactional
+	public List<BookInfo> showBooks() {
+		try {
+			String jpql = "select books from BookInfo books";
+			TypedQuery<BookInfo> query = manager.createQuery(jpql, BookInfo.class);
+			List<BookInfo> list = query.getResultList();
+			if (list.isEmpty()) {
+				throw new LibraryException("No Books Found");
+			} else {
+				return list;
+			}
+
+		} catch (Exception e) {
+			throw new LibraryException(e.getMessage());
+		} finally {
+			manager.close();
+		}
+
+	}
+
+	@Override
+	@Transactional
+	public List<LibraryUsers> showUsers() {
+		try {
+			String jpql = "select users from LibraryUsers users";
+			TypedQuery<LibraryUsers> query = manager.createQuery(jpql, LibraryUsers.class);
+			List<LibraryUsers> list = query.getResultList();
+
+			if (list.isEmpty()) {
+				throw new LibraryException("No Users Found");
+			} else {
+				return list;
+			}
+
+		} catch (Exception e) {
+			throw new LibraryException(e.getMessage());
+		} finally {
+			manager.close();
+		}
+
+	}
+
+	@Override
+	@Transactional
+	public List<BookInfo> searchBook(BookInfo bookInfo) {
+		BookInfo info = new BookInfo();
+		List<BookInfo> list = new ArrayList<BookInfo>();
+		String jpql = null;
+		int id = bookInfo.getIsbn();
+		String bookName = bookInfo.getBookTitle();
+		String authourName = bookInfo.getAuthourName();
+		try {
+			if (id != 0) {
+				info = manager.find(BookInfo.class, id);
+				if (info != null) {
+					list.add(info);
+					return list;
+				} else {
+					throw new LibraryException("Book Not Found With The Given Id");
+				}
+
+			} else if (bookName != null) {
+
+				jpql = "select books from BookInfo books where books.bookTitle =:bookTitle ";
+				TypedQuery<BookInfo> query = manager.createQuery(jpql, BookInfo.class);
+				query.setParameter("bookTitle", bookName);
+				list = query.getResultList();
+				if ((list != null) && (!list.isEmpty())) {
+					return list;
+				} else {
+					throw new LibraryException("No Book Found With The Given Name");
+				}
+
+			} else if (authourName != null) {
+				jpql = "select books from BookInfo books where books.authourName = :aName";
+				TypedQuery<BookInfo> query = manager.createQuery(jpql, BookInfo.class);
+				query.setParameter("aName", authourName);
+				list = query.getResultList();
+				if ((list != null) && (!list.isEmpty())) {
+					return list;
+				} else {
+					throw new LibraryException("No Book Found With The Given Authour");
+				}
+			} else {
+				throw new LibraryException("InValid Searcing Of Books");
+			}
+		} catch (LibraryException e) {
+			throw new LibraryException(e.getMessage());
+
+		} finally {
+			manager.close();
+		}
+
+	}
+
+	@Override
+	@Transactional
+	public List<RequestInfo> showRequests() {
+		try {
+			String jpql = "select reqs from RequestInfo reqs where reqs.issuedDate=null";
+			TypedQuery<RequestInfo> query = manager.createQuery(jpql, RequestInfo.class);
+			List<RequestInfo> list = query.getResultList();
+			if (list.isEmpty()) {
+				throw new LibraryException("No Requests Found");
+			} else {
+				return list;
+			}
+
+		} catch (Exception e) {
+			throw new LibraryException(e.getMessage());
+		} finally {
+			manager.close();
+		}
+
+	}
+
+	@Override
+	@Transactional
+	public boolean bookRequest(int userId, int bookId) {
+		RequestInfo info = new RequestInfo();
+		BookInfo bookInfo = new BookInfo();
+		String jpql = null;
+		int noOfReq = 0;
+		try {
+			jpql = "select count(*) from RequestInfo ri where ri.userId=:uId";
+			Query query = manager.createQuery(jpql);
+			query.setParameter("uId", userId);
+			noOfReq = ((Number) query.getSingleResult()).intValue();
+			System.out.println("no of req placed" + noOfReq);
+			if (noOfReq < 3) {
+				bookInfo = manager.find(BookInfo.class, bookId);
+				if (bookInfo != null) {
+					jpql = "select ri from RequestInfo ri ";
+					TypedQuery<RequestInfo> query2 = manager.createQuery(jpql, RequestInfo.class);
+					List<RequestInfo> list = query2.getResultList();
+
+					for (RequestInfo requestInfo : list) {
+						if (requestInfo.getBookId() == bookId) {
+							throw new LibraryException("This Book Request is Already Placed By SomeOne ");
+						}
+					}
+
+					if (bookInfo.isAvailable()) {
+//						System.out.println("tans started");
+
+						info.setUserId(userId);
+						info.setBookId(bookId);
+						manager.persist(info);
+
+					} else {
+						throw new LibraryException("This Book Is Not Available For Borrowing");
+					}
+
+				} else {
+					throw new LibraryException("Invalid Book Id");
+				}
+
+			} else {
+				throw new LibraryException("You 've Already Placed Maximum No Of Requests");
+			}
+
+		} catch (LibraryException e) {
+
+			throw new LibraryException(e.getMessage());
+		} finally {
+			manager.close();
+		}
+		return true;
+	}
+
+	@Override
+	@Transactional
+	public boolean isBookIssued(int requestId) {
+		RequestInfo info = new RequestInfo();
+		BookInfo bookInfo = new BookInfo();
+		LibraryUsers user = new LibraryUsers();
+		int noOfBooks = 0;
+		int reqBookId = 0;
+		int reqUserId = 0;
+		Date date = new Date();
+		Date expectedReturnDate = null;
+		Calendar calendar = Calendar.getInstance();
+		calendar.add(Calendar.DATE, 15);
+		expectedReturnDate = calendar.getTime();
+		try {
+			info = manager.find(RequestInfo.class, requestId);
+			if (info != null) {
+				Date issueDate = info.getIssuedDate();
+				if (issueDate == null) {
+					reqUserId = info.getUserId();
+					reqBookId = info.getBookId();
+					info.setIssuedDate(date);
+					info.setExpectedReturnDate(expectedReturnDate);
+					user = manager.find(LibraryUsers.class, reqUserId);
+					noOfBooks = user.getNoOfBooksBorrowed();
+					++noOfBooks;
+					user.setNoOfBooksBorrowed(noOfBooks);
+					bookInfo = manager.find(BookInfo.class, reqBookId);
+					bookInfo.setAvailable(false);
+				} else {
+					throw new LibraryException("This Book Is Already Issued");
+				}
+
+			} else {
+				throw new LibraryException("Invalid Request Id");
+			}
+
+		} catch (Exception e) {
+			throw new LibraryException(e.getMessage());
+		} finally {
+			manager.close();
+		}
+		return true;
+	}
+
+	@Override
+	@Transactional
+	public boolean bookReturn(int userId, int bookId) {
+		RequestInfo info = new RequestInfo();
+		String jpql = null;
+		int reqId = 0;
+		Calendar calendar2 = Calendar.getInstance();
+		calendar2.add(Calendar.DATE, 20);
+		Date returnedDate = calendar2.getTime();
+		try {
+
+			jpql = "select ri from RequestInfo ri ";
+			TypedQuery<RequestInfo> query2 = manager.createQuery(jpql, RequestInfo.class);
+			List<RequestInfo> list = query2.getResultList();
+			for (RequestInfo requestInfo : list) {
+				if ((requestInfo.getBookId() == bookId) && (requestInfo.getUserId() == userId)
+						&& (requestInfo.getIssuedDate() != null)) {
+					if (requestInfo.getReturnedDate() != null) {
+						throw new LibraryException("You Have Already Returned This Book");
+
+					} else {
+						reqId = requestInfo.getRequestId();
+					}
+				}
+			}
+
+			if (reqId != 0) {
+				info = manager.find(RequestInfo.class, reqId);
+				info.setReturnedDate(returnedDate);
+
+			} else {
+				throw new LibraryException("Book Not Yet Issued");
+			}
+
+		} catch (LibraryException e) {
+			e.printStackTrace();
+			throw new LibraryException(e.getMessage());
+		} finally {
+			manager.close();
+		}
+
+		return true;
+	}
+
+	@Override
+	@Transactional
+	public boolean isBookReceived(int requestId) {
+		RequestInfo info = new RequestInfo();
+		BookInfo bookInfo = new BookInfo();
+		LibraryUsers user = new LibraryUsers();
+		int noOfBooks = 0;
+		int reqBookId = 0;
+		int reqUserId = 0;
+		double fine = 0;
+		Date expectedReturnDate = null;
+		Date returnedDate = null;
+		try {
+			info = manager.find(RequestInfo.class, requestId);
+			if (info != null) {
+				reqBookId = info.getBookId();
+				reqUserId = info.getUserId();
+				returnedDate = info.getReturnedDate();
+				expectedReturnDate = info.getExpectedReturnDate();
+				if ((returnedDate != null) && (expectedReturnDate != null)) {
+					long expReturnDateInMilliSecs = expectedReturnDate.getTime();
+					long returnedDateInMilliSecs = returnedDate.getTime();
+					long diffInMilliSecs = returnedDateInMilliSecs - expReturnDateInMilliSecs;
+					int NoOfDaysDelayed = (int) (diffInMilliSecs / (24 * 60 * 60 * 1000));
+					user = manager.find(LibraryUsers.class, reqUserId);
+					noOfBooks = user.getNoOfBooksBorrowed();
+					--noOfBooks;
+					user.setNoOfBooksBorrowed(noOfBooks);
+					if (NoOfDaysDelayed > 0) {
+						fine = user.getFine();
+						fine = fine + (NoOfDaysDelayed * 5);
+						user.setFine(fine);
+					}
+					bookInfo = manager.find(BookInfo.class, reqBookId);
+					bookInfo.setAvailable(true);
+					info = manager.find(RequestInfo.class, requestId);
+					LibraryHistory history = new LibraryHistory();
+					history.setRequestId(info.getRequestId());
+					history.setUserId(info.getUserId());
+					history.setBookId(info.getBookId());
+					history.setIssuedDate(info.getIssuedDate());
+					history.setExpectedReturnDate(info.getExpectedReturnDate());
+					history.setReturnedDate(info.getReturnedDate());
+					addToHistory(history);
+					manager.remove(info);
+				} else {
+					throw new LibraryException("User Not Yet Returned The Book");
+				}
+
+			} else {
+				throw new LibraryException("Invalid Request Id");
+			}
+		} catch (LibraryException e) {
+			throw new LibraryException(e.getMessage());
+		} finally {
+			manager.close();
+		}
+		return true;
+	}
+
+	@Override
+	@Transactional
+	public boolean changePassword(int userId, String oldPassword, String newPassword) {
+		LibraryUsers user = new LibraryUsers();
+		String password = null;
+		try {
+			user = manager.find(LibraryUsers.class, userId);
+			password = user.getPassword();
+			if (password.equals(oldPassword)) {
+				user.setPassword(newPassword);
+
+			} else {
+				throw new LibraryException("Invalid Password");
+			}
+		} catch (LibraryException e) {
+			throw new LibraryException(e.getMessage());
+		} finally {
+			manager.close();
+		}
+		return true;
+	}
+
+	@Override
+	@Transactional
+	public BookInfo updateBook(BookInfo book) {
+		BookInfo bookInfo = new BookInfo();
+		try {
+			bookInfo = manager.find(BookInfo.class, book.getIsbn());
+			if (book.getBookTitle() != null) {
+				bookInfo.setBookTitle(book.getBookTitle());
+			}
+			if (book.getAuthourName() != null) {
+				bookInfo.setAuthourName(book.getAuthourName());
+			}
+			if (book.getPrice() != 0) {
+				bookInfo.setPrice(book.getPrice());
+			}
+			if (!(bookInfo.isAvailable() == book.isAvailable())) {
+
+				bookInfo.setAvailable(book.isAvailable());
+			}
+
+			return bookInfo;
+		} catch (Exception e) {
+			System.err.println(e.getMessage());
+			return null;
+		}
+
+	}
+
+	@Override
+	@Transactional
+	public LibraryUsers getUser(String emailId) {
+		
+	//	String jpql = null;
+		//try {
+System.out.println(emailId);
+	//	String	jpql = "select users from LibraryUsers users ";
+		String jpql ="from LibraryUsers where emailId=:emailId ";
+			TypedQuery<LibraryUsers> query2 = manager.createQuery(jpql, LibraryUsers.class);
+			query2.setParameter("emailId", emailId);
+			LibraryUsers list = query2.getSingleResult();
+			return list;
+//			for (LibraryUsers user : list) {
+//				if (user.getEmailId().equalsIgnoreCase(emailId)) {
+//					return user;
+//			//	}
+//			}
+//		} catch (LibraryException e) {
+//			throw new LibraryException("User Not Fond");
+//		}
+//		return null;
+//	}
+	}
+
+	@Override
+	@Transactional
+	public List<RequestInfo> getRequestedBooks() {
+		String jpql = null;
+		try {
+			jpql = "select info from RequestInfo info where info.issuedDate != null";
+			TypedQuery<RequestInfo> query2 = manager.createQuery(jpql, RequestInfo.class);
+			List<RequestInfo> list = query2.getResultList();
+			return list;
+
+		} catch (LibraryException e) {
+			throw new LibraryException("Can't Find The Requested Books");
+		}
+	}
+
+	@Override
+	@Transactional
+	public List<RequestInfo> userTakenBooks(int userId) {
+		String jpql = null;
+
+		try {
+			jpql = "select info from RequestInfo info where info.userId =: userId";
+			TypedQuery<RequestInfo> query = manager.createQuery(jpql, RequestInfo.class);
+			query.setParameter("userId", userId);
+			List<RequestInfo> list = query.getResultList();
+
+			if ((list != null) && (!list.isEmpty())) {
+				return list;
+			} else {
+				throw new LibraryException("No Books Borrowed By User");
+			}
+
+		} catch (LibraryException e) {
+			throw new LibraryException(e.getMessage());
+		} finally {
+			manager.close();
+		}
+
+	}
+
+	@Override
+	@Transactional
+	public List<RequestInfo> getReturnedBooks() {
+		String jpql = null;
+		try {
+			jpql = "select info from RequestInfo info where info.returnedDate != null";
+			TypedQuery<RequestInfo> query2 = manager.createQuery(jpql, RequestInfo.class);
+			List<RequestInfo> list = query2.getResultList();
+			if (!list.isEmpty() && (list != null)) {
+				return list;
+			} else {
+				throw new LibraryException("No Books Returned Yet");
+			}
+
+		} catch (LibraryException e) {
+			throw new LibraryException(e.getMessage());
+		} finally {
+			manager.close();
+		}
+
+	}
+
+	@Override
+	@Transactional
+	public boolean addToHistory(LibraryHistory history) {
+		try {
+			manager.persist(history);
+			return true;
+		} catch (Exception e) {
+			throw new LibraryException("Cannot Add To History");
+		} finally {
+			manager.close();
+		}
+	}
+
+	@Override
+	public List<LibraryHistory> getLibHistory() {
+		try {
+			String jpql = "select history from LibraryHistory history";
+			TypedQuery<LibraryHistory> query = manager.createQuery(jpql, LibraryHistory.class);
+			List<LibraryHistory> list = query.getResultList();
+
+			if (list.isEmpty()) {
+				throw new LibraryException("No History Found");
+			} else {
+				return list;
+			}
+
+		} catch (Exception e) {
+			throw new LibraryException(e.getMessage());
+		} finally {
+			manager.close();
+		}
+	}
+
+	@Override
+	@Transactional
+	public List<LibraryHistory> getUserHistory(int userId) {
+		String jpql = null;
+		try {
+			jpql = "select info from LibraryHistory info where info.userId =: userId";
+			TypedQuery<LibraryHistory> query = manager.createQuery(jpql, LibraryHistory.class);
+			query.setParameter("userId", userId);
+			List<LibraryHistory> list = query.getResultList();
+			if ((list != null) && (!list.isEmpty())) {
+				return list;
+			} else {
+				throw new LibraryException("User History is Empty");
+			}
+
+		} catch (LibraryException e) {
+			throw new LibraryException(e.getMessage());
+		}
+	}
+
+}

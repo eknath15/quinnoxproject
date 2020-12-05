@@ -1,0 +1,29 @@
+
+p
+java:S1128"?Remove this unused import 'org.springframework.http.MediaType'.(úŸİ¯şÿÿÿÿHøRMINORZ
+CODE_SMELL
+r
+java:S4684p"@Replace this persistent entity with a simple POJO or DTO object.(Ì¬ÅùHüRCRITICALZVULNERABILITY
+x
+java:S4684ı"@Replace this persistent entity with a simple POJO or DTO object.(µÉÔûÿÿÿÿH‚RCRITICALZVULNERABILITY
+s
+java:S4684µ"@Replace this persistent entity with a simple POJO or DTO object.(ØÁŞÆHşRCRITICALZVULNERABILITY
+x
+java:S4684ï"@Replace this persistent entity with a simple POJO or DTO object.(˜èİ‡ıÿÿÿÿHRCRITICALZVULNERABILITY
+s
+java:S4684‹"@Replace this persistent entity with a simple POJO or DTO object.(¿Ò‰ıHıRCRITICALZVULNERABILITY
+w
+java:S4684a"@Replace this persistent entity with a simple POJO or DTO object.(œ‘“¤ùÿÿÿÿHûRCRITICALZVULNERABILITY
+•
+java:S1192$"aDefine a constant instead of duplicating this literal "Request Can't Be Placed to Admin" 3 times.(àÇ€ªşÿÿÿÿH÷RCRITICALZ
+CODE_SMELL
+s
+java:S4684Ô"@Replace this persistent entity with a simple POJO or DTO object.(ËéÑŒHÿRCRITICALZVULNERABILITY
+s
+java:S4684â"@Replace this persistent entity with a simple POJO or DTO object.(¡§˜ÈH€RCRITICALZVULNERABILITY
+w
+java:S4684G"@Replace this persistent entity with a simple POJO or DTO object.(•â¶°øÿÿÿÿHùRCRITICALZVULNERABILITY
+s
+java:S4684‹"@Replace this persistent entity with a simple POJO or DTO object.(êÓú›HƒRCRITICALZVULNERABILITY
+s	java:S125O"<This block of commented-out lines of code should be removed.(™œÚ¾ûÿÿÿÿ8ú‘»‡ã.H…RMAJORZ
+CODE_SMELL
