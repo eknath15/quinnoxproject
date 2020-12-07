@@ -1,0 +1,19 @@
+thead{
+    background-color: orange ;
+    color: white;
+}
+tr,td{
+    border-color: white;
+    color: white;
+    
+}
+
+button{
+    background-color: orange;
+    color: white;
+}
+
+.button:hover {
+    background-color:black;
+    color: white;
+  }

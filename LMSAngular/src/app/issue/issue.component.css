@@ -1,0 +1,17 @@
+button{
+    background-color: orange;
+    color: black;
+}
+
+.button:hover {
+    background-color:black;
+    color: white;
+  }
+  tr,td{
+    border-color: white;
+    color: white;
+}
+th{
+  background: orange;
+  color: white;
+}

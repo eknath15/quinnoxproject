@@ -1,0 +1,20 @@
+h2,label{
+    color: black;
+}
+button{
+    background-color: orange;
+    color: white;
+}
+
+.button:hover {
+    background-color:orange;
+    color: black;
+  }
+tr,td{
+    border-color: white;
+    color:white;
+}
+
+th{
+    background-color: orange;
+}

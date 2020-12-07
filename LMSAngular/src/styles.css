@@ -1,0 +1,27 @@
+/* You can add global styles to this file, and also import other style files */
+div{
+    font-size: solid;
+    font-weight: 600;
+    color:black;
+}
+
+table{
+    border:solid;
+    border-width: 2px;
+    color:black;
+    /* background-image: url("https://www.pixelstalk.net/wp-content/uploads/2016/08/Old-Library-Wallpaper.jpg");  */
+    /* http://7-themes.com/data_images/out/45/6925497-3d-fire-book-image-3d-hd-wallpaper.jpg */
+    /* https://c4.wallpaperflare.com/wallpaper/1011/436/908/imagination-books-artwork-children-wallpaper-thumb.jpg */
+    background-image: url("https://i.pinimg.com/originals/ac/78/5f/ac785fabc82d948404bf3de6935bcfa8.jpg");
+    /* background-image: url("https://c4.wallpaperflare.com/wallpaper/489/837/301/macro-table-books-blur-wallpaper-thumb.jpg"); */
+    background-repeat: no-repeat;
+    
+    background-size: cover;
+    height: 100%;
+}
+tr,td{
+    border-color: black;
+}
+label{
+    color: white;
+}

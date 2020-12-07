@@ -1,0 +1,12 @@
+th{
+  background-color: black;
+}
+thead{
+  background-color: black ;
+}
+
+.table{
+  border: solid;
+  border-color: black;
+  border-width: 5px;
+}
